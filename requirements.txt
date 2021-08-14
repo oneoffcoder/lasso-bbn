@@ -9,6 +9,7 @@ numpy
 scipy
 networkx
 pandas
+scikit-learn
 # DOCUMENTATION
 sphinx
 sphinx_rtd_theme
