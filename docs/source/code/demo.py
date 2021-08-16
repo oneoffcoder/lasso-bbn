@@ -8,8 +8,6 @@ df = pd.read_csv('./data/data-binary.csv')
 
 # Step 2. learn the structure and parameters
 json_data = do_learn(df)
-import json
-print(json.dumps(json_data, indent=1))
 
 # Step 3. convert to a Py-BBN instance
 bbn = to_bbn(json_data)
