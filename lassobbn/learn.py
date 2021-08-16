@@ -4,6 +4,7 @@ from typing import Tuple, Dict, List
 import networkx as nx
 import numpy as np
 import pandas as pd
+import pybbn.graph.dag
 from networkx.algorithms.dag import is_directed_acyclic_graph
 from pybbn.graph.dag import Bbn
 from sklearn.linear_model import LogisticRegression
@@ -167,5 +168,10 @@ def do_learn(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> Dict:
     return json_data
 
 
-def to_bbn(json_data: Dict):
+def to_bbn(json_data: Dict) -> pybbn.graph.dag.Bbn:
+    """
+    Converts the dictionary of structure and parameters to a Py-BBN instance.
+    :param json_data: Dictionary of structure and parameters.
+    :return: BBN.
+    """
     return Bbn.from_dict(json_data)
