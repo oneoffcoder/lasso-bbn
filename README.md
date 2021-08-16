@@ -1,3 +1,5 @@
+![pybbn logo](https://lasso-bbn.readthedocs.io/en/latest/_images/logo-250x250.png)
+
 # LASSO BBN
 
 Learning Bayesian Belief Networks (BBNs) with LASSO. Example code is as below. 
