@@ -49,3 +49,49 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Copyright
+=========
+
+Software
+--------
+
+::
+
+    Copyright 2021 Jee Vang
+
+Art
+---
+
+::
+
+   Copyright 2020 Daytchia Vang
+
+
+Citation
+========
+
+::
+
+    @misc{vang_2021,
+    title={lassobbn},
+    url={https://lassobbn.oneoffcoder.com/},
+    author={Vang, Jee},
+    year={2021},
+    month={Aug}}
+
+Author
+======
+
+Jee Vang, Ph.D.
+
+- |Patreon_Link|
+- |Github_Link|
+
+.. |Patreon_Link| raw:: html
+
+   <a href="https://www.patreon.com/vangj" target="_blank">Patreon</a>: support is appreciated
+
+.. |Github_Link| raw:: html
+
+   <a href="https://github.com/sponsors/vangj" target="_blank">GitHub</a>: sponsorship will help us change the world for the better
