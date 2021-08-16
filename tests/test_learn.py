@@ -1,9 +1,13 @@
 import pandas as pd
 
-from lassobbn.learn import do_learn
+from lassobbn.learn import do_learn, to_bbn
 
 
 def test_learn():
+    """
+    Tests learning structure and parameters.
+    :return: None.
+    """
     df = pd.read_csv('./data/data-binary.csv')
     observed = do_learn(df)
     expected = {'nodes': {'a': {'probs': [0.1893, 0.8107], 'variable': {'id': 0, 'name': 'a', 'values': ['0', '1']}},
@@ -22,4 +26,33 @@ def test_learn():
                               'variable': {'id': 4, 'name': 'e', 'values': ['0', '1']}}},
                 'edges': [{'pa': 'a', 'ch': 'c'}, {'pa': 'a', 'ch': 'd'}, {'pa': 'b', 'ch': 'c'},
                           {'pa': 'b', 'ch': 'd'}, {'pa': 'b', 'ch': 'e'}, {'pa': 'd', 'ch': 'e'}]}
+    assert observed == expected
+
+
+def test_to_bbn():
+    """
+    Test converting structure/parameter dictionary to BBN.
+    :return: None.
+    """
+    df = pd.read_csv('./data/data-binary.csv')
+    json_data = do_learn(df)
+    bbn = to_bbn(json_data)
+
+    observed = str(bbn).split('\n')
+    expected = '''0|a|0,1
+        1|b|0,1
+        2|c|0,1
+        3|d|0,1
+        4|e|0,1
+        0->2
+        0->3
+        1->2
+        1->3
+        1->4
+        3->4'''.strip().split('\n')
+
+    observed = [o.strip() for o in observed]
+    expected = [e.strip() for e in expected]
+
+    assert bbn is not None
     assert observed == expected

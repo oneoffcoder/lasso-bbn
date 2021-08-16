@@ -10,6 +10,7 @@ scipy
 networkx
 pandas
 scikit-learn
+pybbn
 # DOCUMENTATION
 sphinx
 sphinx_rtd_theme

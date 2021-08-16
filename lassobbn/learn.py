@@ -1,13 +1,25 @@
 from itertools import chain, combinations
+from typing import Tuple, Dict, List
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 from networkx.algorithms.dag import is_directed_acyclic_graph
+from pybbn.graph.dag import Bbn
 from sklearn.linear_model import LogisticRegression
 
 
-def get_model_params(df, solver='liblinear', penalty='l1', C=0.2):
+def get_model_params(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> pd.DataFrame:
+    """
+    Gets LASSO regression parameters for each variable.
+
+    :param df: Data.
+    :param solver: Solver (liblinear or saga). Default: `liblinear`.
+    :param penalty: Penalty. Default: `l1`.
+    :param C: Regularlization. Default: `0.2`.
+    :return: LASSO regression parameters for each variable.
+    """
+
     def get_model(df, X_cols, y_col):
         X = df[X_cols]
         y = df[y_col]
@@ -35,7 +47,15 @@ def get_model_params(df, solver='liblinear', penalty='l1', C=0.2):
     return param_df
 
 
-def get_structure(param_df, threshold=0.0):
+def get_structure(param_df: pd.DataFrame, threshold=0.0) -> nx.DiGraph:
+    """
+    Gets the structure.
+
+    :param param_df: LASSO regression parameters for each variable.
+    :param threshold: Value at which to consider coefficient as significant.
+    :return: Structure.
+    """
+
     def get_edges(r, nodes):
         edges = []
         ch = r['child']
@@ -63,7 +83,15 @@ def get_structure(param_df, threshold=0.0):
     return g
 
 
-def get_parameters(df, g):
+def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]], Dict[str, List[float]]]:
+    """
+    Gets the parameters.
+
+    :param df: Data.
+    :param g: Graph (structure).
+    :return: Tuple; first item is dictionary of domains; second item is dictionary of probabilities.
+    """
+
     def vals_to_str():
         ddf = df.copy(deep=True)
         for col in ddf.columns:
@@ -103,7 +131,17 @@ def get_parameters(df, g):
     return domains, p
 
 
-def do_learn(df, solver='liblinear', penalty='l1', C=0.2):
+def do_learn(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> Dict:
+    """
+    Learns the structure and parameter of a Bayesian Belief Network using LASSO.
+
+    :param df: Data.
+    :param solver: Solver (liblinear or saga). Default: `liblinear`.
+    :param penalty: Penalty. Default: `l1`.
+    :param C: Regularlization. Default: `0.2`.
+    :return: Dictionary storing structure and parameters.
+    """
+
     def get_node(name, n_id):
         return {
             'probs': p[name],
@@ -121,17 +159,13 @@ def do_learn(df, solver='liblinear', penalty='l1', C=0.2):
     g = get_structure(param_df)
     d, p = get_parameters(df, g)
 
-    print(g.nodes())
-    print('-' * 15)
-    print(g.edges())
-    print('-' * 15)
-    print(p)
-    print('-' * 15)
-
     json_data = {
         'nodes': {name: get_node(name, n_id) for n_id, name in enumerate(g.nodes())},
         'edges': get_edges()
     }
 
-    print(json_data)
     return json_data
+
+
+def to_bbn(json_data: Dict):
+    return Bbn.from_dict(json_data)
