@@ -6,6 +6,10 @@
 LASSO BBN
 =========
 
+.. image:: _static/images/logo-250x250.png
+   :align: center
+   :alt: pybbn logo.
+
 Learning Bayesian Belief Networks with LASSO regression.
 
 .. literalinclude:: code/demo.py
@@ -58,14 +62,26 @@ Software
 
 ::
 
-    Copyright 2021 Jee Vang
+   Copyright 2021 Farrokh Alemi and Jee Vang
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
 Art
 ---
 
 ::
 
-   Copyright 2020 Daytchia Vang
+   Copyright 2021 Daytchia Vang
 
 
 Citation
@@ -76,14 +92,25 @@ Citation
     @misc{vang_2021,
     title={lassobbn},
     url={https://lassobbn.oneoffcoder.com/},
-    author={Vang, Jee},
+    author={F. Alemi, J. Vang},
     year={2021},
     month={Aug}}
 
 Author
 ======
 
+Farrokh Alemi, Ph.D.
+--------------------
+
+- |GMU_Link|
+
+.. |GMU_Link| raw:: html
+
+   <a href="https://chhs.gmu.edu/profiles/falemi" target="_blank">Biography</a>
+
+
 Jee Vang, Ph.D.
+---------------
 
 - |Patreon_Link|
 - |Github_Link|
@@ -95,3 +122,4 @@ Jee Vang, Ph.D.
 .. |Github_Link| raw:: html
 
    <a href="https://github.com/sponsors/vangj" target="_blank">GitHub</a>: sponsorship will help us change the world for the better
+
