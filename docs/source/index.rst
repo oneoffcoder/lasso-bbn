@@ -10,7 +10,7 @@ LASSO BBN
    :align: center
    :alt: pybbn logo.
 
-Learning Bayesian Belief Networks with LASSO regression.
+This project learns Bayesian Belief Network structures using LASSO regression. The project is work-in-progress and where appropriate, we have stated work that remains to be done (e.g. ``TODO``).
 
 .. toctree::
    :maxdepth: 1
@@ -22,7 +22,6 @@ Learning Bayesian Belief Networks with LASSO regression.
    inference
    example
    modules
-   roadmap
    apis
 
 Indices and tables
@@ -67,7 +66,7 @@ Citation
 
 ::
 
-    @misc{vang_2021,
+    @misc{alemi_2021,
     title={lassobbn},
     url={https://lassobbn.oneoffcoder.com/},
     author={F. Alemi, J. Vang},
