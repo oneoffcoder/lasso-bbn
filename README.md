@@ -1,6 +1,6 @@
-# lasso-bbn
+# LASSO BBN
 
-Learning Bayesian Belief Networks with LASSO. Example code is as below. 
+Learning Bayesian Belief Networks (BBNs) with LASSO. Example code is as below. 
 
 ```python
 import pandas as pd
@@ -11,3 +11,5 @@ bbn_specs = do_learn(df)
 
 print(bbn_specs)
 ```
+
+You can then use [Py-BBN](https://py-bbn.readthedocs.io/) to create a BBN and join tree (JT) instance and perform exact inference.
