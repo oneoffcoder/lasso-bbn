@@ -68,7 +68,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_baseurl = 'https://lassobbn.oneoffcoder.com/'
+html_baseurl = 'https://lasso-bbn.readthedocs.io'
 html_static_path = ['_static']
 pygments_style = 'sphinx'
 html_show_sourcelink = False
@@ -80,7 +80,7 @@ html_extra_path = ['robots.txt']
 source_suffix = '.rst'
 
 html_theme_options = {
-    'canonical_url': 'https://lassobbn.oneoffcoder.com/',
+    'canonical_url': 'https://lasso-bbn.readthedocs.io',
     'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
