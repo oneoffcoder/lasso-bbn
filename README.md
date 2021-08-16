@@ -26,6 +26,7 @@ pip install lassobbn
 
 - [Code](https://github.com/oneoffcoder/lasso-bbn)
 - [Documentation](https://lasso-bbn.readthedocs.io/en/latest/index.html)
+- [PyPi](https://pypi.org/project/lassobbn/)
 
 # Additional APIs
 
