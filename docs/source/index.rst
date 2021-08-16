@@ -123,3 +123,8 @@ Jee Vang, Ph.D.
 
    <a href="https://github.com/sponsors/vangj" target="_blank">GitHub</a>: sponsorship will help us change the world for the better
 
+
+Acknowledgement
+===============
+
+This software was funded by Department of Health Administration and Policy (HAP), under the College of Health and Human Services (CHHS) at George Mason University (GMU). The contents are those of the author(s) and do not necessarily represent the official views of, nor an endorsement, by HAP, CHHS, or GMU.
