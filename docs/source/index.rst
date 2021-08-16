@@ -12,6 +12,12 @@ LASSO BBN
 
 This project learns Bayesian Belief Network structures using LASSO regression. The project is work-in-progress and where appropriate, we have stated work that remains to be done (e.g. ``TODO``).
 
+You may install ``lassobbn`` from `pypi <https://pypi.org/project/lassobbn/>`_.
+
+.. code:: bash
+
+    pip install lassobbn
+
 .. toctree::
    :maxdepth: 1
    :caption: Content

@@ -16,6 +16,12 @@ print(bbn_specs)
 
 You can then use [Py-BBN](https://py-bbn.readthedocs.io/) to create a BBN and join tree (JT) instance and perform exact inference.
 
+# Installation
+
+```bash
+pip install lassobbn
+```
+
 # Links
 
 - [Code](https://github.com/oneoffcoder/lasso-bbn)
