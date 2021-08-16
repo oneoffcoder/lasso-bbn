@@ -111,3 +111,17 @@ Acknowledgement
 ===============
 
 This software was funded by Department of Health Administration and Policy (HAP), under the College of Health and Human Services (CHHS) at George Mason University (GMU). The contents are those of the author(s) and do not necessarily represent the official views of, nor an endorsement, by HAP, CHHS, or GMU.
+
+Help
+====
+
+- |Source_Link|
+- |PyPi_Link|
+
+.. |Source_Link| raw:: html
+
+   <a href="https://github.com/oneoffcoder/lasso-bbn" target="_blank">GitHub</a>: source code
+
+.. |PyPi_Link| raw:: html
+
+   <a href="https://pypi.org/project/lassobbn/" target="_blank">PyPi</a>: distribution
