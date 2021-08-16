@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SOURCE_DIST=/py-bbn/dist/pybbn-${LIB_VERSION}.tar.gz
+SOURCE_DIST=/pypi-lib/dist/lassobbn-${LIB_VERSION}.tar.gz
 
 buildCode() {
   echo "start the build"
