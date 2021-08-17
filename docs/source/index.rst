@@ -1,3 +1,19 @@
+.. meta::
+   :description: Learning causal Bayesian Belief Networks using Lasso regression.
+   :keywords: python, statistics, causal, causality, probabilistic, exact inference, bayesian, bayesian belief networks, lasso regression, regression
+   :robots: index, follow
+   :abstract: A Python implementation of causal structure learning of Bayesian Belief Networks using Lasso regression.
+   :author: Jee Vang, Ph.D.
+   :contact: vangjee@gmail.com
+   :copyright: Farrokh Alemi, Ph.D. and Jee Vang, Ph.D.
+   :content: global
+   :generator: Sphinx
+   :language: English
+   :rating: general
+   :reply-to: vangjee@gmail.com
+   :web_author: Jee Vang, Ph.D.
+   :revisit-after: 1 days
+
 .. LASSO BBN documentation master file, created by
    sphinx-quickstart on Mon Aug 16 11:53:07 2021.
    You can adapt this file completely to your liking, but it should at least
@@ -30,6 +46,7 @@ You may install ``lassobbn`` from `pypi <https://pypi.org/project/lassobbn/>`_.
    algorithm
    modules
    apis
+   zzz-bib
 
 Indices and tables
 ==================

@@ -1,7 +1,7 @@
 Algorithm
 =========
 
-The structure learning algorithm is best understood when a complete ordering of a set of variables is given. Assume we have a causal model for which we know the true structure and parameters, and let's say this model is a causal Bayesian Belief Network (BBN). Let's say this model is shown in the figure below with the variables as all binary.
+Structure learning of causal Bayesian Belief Networks (BBNs) using regression and sequence information has been reported :cite:`2020a:alemi,2020b:alemi`. In this section, we will take a less formal approach to explaining the structure learning algorithm. The structure learning algorithm is best understood when a complete ordering of a set of variables is given. Assume we have a causal model for which we know the true structure and parameters, and let's say this model is a causal Bayesian Belief Network (BBN). Let's say this model is shown in the figure below with the variables as all binary.
 
 .. graphviz::
 
@@ -26,7 +26,7 @@ The structure learning algorithm iterates over each variable as a dependent vari
 - :math:`d = a + b + c`
 - :math:`e = a + b + c + d`
 
-We will eliminate which independents variables are not a parent of the dependent variable by knowing that the sequence implies time dependency and the coefficient associated with each independent variable indicates prediction strength. Lasso regularization will force the coefficients to zero, and it is expected that each model specified will will have non-zero coefficients for those independent variables that are parents of the dependent variable. The following table lists the coefficients of each variable in a model for when the specified variable is the dependent variable.
+We will eliminate which independents variables are not a parent of the dependent variable by knowing that the sequence implies time dependency and the coefficient associated with each independent variable indicates prediction strength. Lasso regularization will force the coefficients to zero, and it is expected that each model specified will have non-zero coefficients for those independent variables that are parents of the dependent variable. The following table lists the coefficients of each variable in a model for when the specified variable is the dependent variable.
 
 .. csv-table:: Regression Parameters
    :file: code/model-parameters.csv

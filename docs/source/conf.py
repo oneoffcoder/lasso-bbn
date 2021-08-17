@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 # -- Project information -----------------------------------------------------
 
 project = 'LASSO BBN'
-copyright = '2021, Rocket Vector'
+copyright = '2021, Farrokh Alemi and Jee Vang'
 author = 'Jee Vang, Ph.D.'
 
 # The full version, including alpha/beta/rc tags
