@@ -27,6 +27,7 @@ You may install ``lassobbn`` from `pypi <https://pypi.org/project/lassobbn/>`_.
    learning
    inference
    example
+   algorithm
    modules
    apis
 
