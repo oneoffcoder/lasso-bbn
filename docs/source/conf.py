@@ -37,6 +37,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
+    'sphinx.ext.graphviz',
     'sphinxcontrib.bibtex',
     'sphinx_sitemap',
     'nbsphinx'
