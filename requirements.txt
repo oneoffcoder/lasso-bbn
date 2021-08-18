@@ -1,4 +1,5 @@
 # TEST
+nose
 coverage
 # LINT OR DIE
 flake8
@@ -20,3 +21,4 @@ sphinx-sitemap
 nbsphinx
 # PUBLISHING
 twine
+setuptools
