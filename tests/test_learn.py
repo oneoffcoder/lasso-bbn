@@ -5,9 +5,9 @@ import pandas as pd
 from lassobbn.learn import do_learn, to_bbn
 
 
-def test_learn():
+def test_learn_complete_ordering():
     """
-    Tests learning structure and parameters.
+    Tests learning structure and parameters with complete ordering.
     :return: None.
     """
     df = pd.read_csv('./data/data-binary.csv')
@@ -33,9 +33,9 @@ def test_learn():
     assert observed == expected
 
 
-def test_to_bbn():
+def test_to_bbn_with_complete_ordering():
     """
-    Test converting structure/parameter dictionary to BBN.
+    Test converting structure/parameter dictionary to BBN with complete ordering.
     :return: None.
     """
     df = pd.read_csv('./data/data-binary.csv')
