@@ -16,6 +16,7 @@ def get_model_params(df: pd.DataFrame, ordering: List[List[str]], solver='liblin
     Gets LASSO regression parameters for each variable.
 
     :param df: Data.
+    :param ordering: Ordering of variables.
     :param solver: Solver (liblinear or saga). Default: `liblinear`.
     :param penalty: Penalty. Default: `l1`.
     :param C: Regularlization. Default: `0.2`.
