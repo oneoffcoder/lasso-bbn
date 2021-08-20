@@ -1,5 +1,5 @@
 from itertools import chain, combinations
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Any
 
 import networkx as nx
 import numpy as np
@@ -10,7 +10,8 @@ from pybbn.graph.dag import Bbn
 from sklearn.linear_model import LogisticRegression
 
 
-def get_model_params(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> pd.DataFrame:
+def get_model_params(df: pd.DataFrame, ordering: List[List[str]], solver='liblinear', penalty='l1',
+                     C=0.2) -> pd.DataFrame:
     """
     Gets LASSO regression parameters for each variable.
 
@@ -42,8 +43,11 @@ def get_model_params(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) 
 
         return p
 
-    args = [(list(df.columns[0:index]), y) for index, y in enumerate(df.columns) if index > 0]
-    models = [(y_col, get_model(df, X_cols, y_col)) for X_cols, y_col in args]
+    def get_models(i, y_cols):
+        X_cols = list(chain(*ordering[:i]))
+        return [(y_col, get_model(df, X_cols, y_col)) for y_col in y_cols]
+
+    models = chain(*[get_models(i, y_cols) for i, y_cols in enumerate(ordering) if i > 0])
     param_df = pd.DataFrame([extract_model_params(y, df.columns, model) for y, model in models])
     return param_df
 
@@ -132,11 +136,12 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
     return domains, p
 
 
-def do_learn(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> Dict:
+def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty='l1', C=0.2) -> Dict:
     """
     Learns the structure and parameter of a Bayesian Belief Network using LASSO.
 
     :param df: Data.
+    :param meta: Meta information used for learning structure.
     :param solver: Solver (liblinear or saga). Default: `liblinear`.
     :param penalty: Penalty. Default: `l1`.
     :param C: Regularlization. Default: `0.2`.
@@ -156,7 +161,7 @@ def do_learn(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> Dict:
     def get_edges():
         return [{'pa': pa, 'ch': ch} for pa, ch in g.edges()]
 
-    param_df = get_model_params(df, solver=solver, penalty=penalty, C=C)
+    param_df = get_model_params(df, meta['ordering'], solver=solver, penalty=penalty, C=C)
     g = get_structure(param_df)
     d, p = get_parameters(df, g)
 

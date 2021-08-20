@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 
 from lassobbn.learn import do_learn, to_bbn
@@ -9,7 +11,9 @@ def test_learn():
     :return: None.
     """
     df = pd.read_csv('./data/data-binary.csv')
-    observed = do_learn(df)
+    with open('./data/data-binary-complete.json', 'r') as f:
+        meta = json.load(f)
+    observed = do_learn(df, meta)
     expected = {'nodes': {'a': {'probs': [0.1893, 0.8107], 'variable': {'id': 0, 'name': 'a', 'values': ['0', '1']}},
                           'b': {'probs': [0.8029, 0.1971], 'variable': {'id': 1, 'name': 'b', 'values': ['0', '1']}},
                           'c': {
@@ -35,7 +39,9 @@ def test_to_bbn():
     :return: None.
     """
     df = pd.read_csv('./data/data-binary.csv')
-    json_data = do_learn(df)
+    with open('./data/data-binary-complete.json', 'r') as f:
+        meta = json.load(f)
+    json_data = do_learn(df, meta)
     bbn = to_bbn(json_data)
 
     observed = str(bbn).split('\n')
