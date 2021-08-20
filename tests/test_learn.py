@@ -117,7 +117,6 @@ def test_to_bbn_with_partial_ordering():
         1->4
         3->4'''.strip().split('\n')
 
-    print(observed)
     observed = [o.strip() for o in observed]
     expected = [e.strip() for e in expected]
 
