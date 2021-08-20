@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 
 from lassobbn.learn import do_learn, to_bbn
@@ -6,13 +8,17 @@ from pybbn.pptc.inferencecontroller import InferenceController
 # Step 1. read the data
 df = pd.read_csv('./data/data-binary.csv')
 
-# Step 2. learn the structure and parameters
-json_data = do_learn(df)
+# Step 2. read in the meta information
+with open('./data/data-binary-complete.json', 'r') as f:
+    meta = json.load(f)
 
-# Step 3. convert to a Py-BBN instance
+# Step 3. learn the structure and parameters
+json_data = do_learn(df, meta)
+
+# Step 4. convert to a Py-BBN instance
 bbn = to_bbn(json_data)
 
-# Step 4. convert the BBN to a join tree
+# Step 5. convert the BBN to a join tree
 join_tree = InferenceController.apply(bbn)
 
 # print the posterior probabilities

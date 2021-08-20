@@ -5,7 +5,7 @@ coverage/
 .coverage*
 .noseids
 dist/
-pysparkbbn.egg-info/
+lassobbn.egg-info/
 build/
 .ipynb_checkpoints/
 .pypirc
