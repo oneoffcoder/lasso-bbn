@@ -40,6 +40,7 @@ You may install ``lassobbn`` from `pypi <https://pypi.org/project/lassobbn/>`_.
 
    quickstart
    data
+   metainfo
    learning
    inference
    example

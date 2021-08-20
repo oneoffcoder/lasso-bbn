@@ -5,7 +5,7 @@ Learning a Bayesian Belief Network (BBN) means to learn the structure and parame
 
 .. code-block:: python
 
-   do_learn(df: pd.DataFrame, solver='liblinear', penalty='l1', C=0.2) -> Dict
+   do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty='l1', C=0.2) -> Dict
 
 
 Since we are using logistic regression with LASSO regularization, you will need to specify how to accomplish the regression with some arguments. The solver can be either ``liblinear`` or ``saga``. The penalty must be ``l1`` and the regularization strength, ``C`` is a number between [0, 1]. For ``C``, a smaller value means stronger regularlization. Please take a look at Scikit's official `documentation <https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html>`_ for additional information.
