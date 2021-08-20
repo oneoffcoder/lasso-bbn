@@ -23,3 +23,4 @@ What is returned is a Python dictionary that stores the structure and parameters
    - *L02*: How do we implement LASSO regression with categorical dependent variable?
    - *L03*: How do we learn with partial ordering of the variables?
    - *L04*: How do we learn with no ordering of the variables?
+   - *L05*: Implement blacklisted or whitelisted edges.
