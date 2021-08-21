@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name='lassobbn',
-    version='0.0.1',
+    version='0.0.2',
     author='Jee Vang',
     author_email='g@oneoffcoder.com',
     packages=find_packages(exclude=('*.tests', '*.tests.*', 'tests.*', 'tests')),
