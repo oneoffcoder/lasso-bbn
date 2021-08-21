@@ -110,20 +110,38 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
             ch_domain = domains[ch]
             return [f'{ch}=="{v}"' for v in ch_domain]
         else:
+            def is_valid(tups):
+                n_tups = len(tups)
+                u_tups = len(set([name for name, _ in tups]))
+                if n_tups == u_tups:
+                    return True
+                return False
+
             vals = [[(pa, v) for v in domains[pa]] for pa in pas]
             vals = vals + [[(ch, v) for v in domains[ch]]]
             vals = chain(*vals)
             vals = combinations(vals, len(pas) + 1)
-            vals = filter(
-                lambda tups: tups[0][0] != tups[1][0] and tups[0][0] != tups[2][0] and tups[1][0] != tups[2][0], vals)
+            vals = filter(is_valid, vals)
             vals = map(lambda tups: ' and '.join([f'{t[0]}=="{t[1]}"' for t in tups]), vals)
             vals = list(vals)
             return vals
 
     def get_total(filters, n):
+        def divide(arr):
+            a = np.array(arr)
+            n = np.sum(a)
+
+            if n == 0:
+                p = 1 / len(arr)
+                return [p for _ in range(len(arr))]
+
+            r = a / n
+            r = list(r)
+            return r
+
         counts = [ddf.query(f).shape[0] for f in filters]
         counts = [counts[i:i + n] for i in range(0, len(counts), n)]
-        counts = [list(np.array(arr) / sum(arr)) for arr in counts]
+        counts = [divide(arr) for arr in counts]
         counts = list(chain(*counts))
         return counts
 
@@ -137,7 +155,7 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
     return domains, p
 
 
-def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty='l1', C=0.2) -> Dict:
+def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty='l1', C=0.2, threshold=0.0) -> Dict:
     """
     Learns the structure and parameter of a Bayesian Belief Network using LASSO.
 
@@ -146,6 +164,7 @@ def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty
     :param solver: Solver (liblinear or saga). Default: `liblinear`.
     :param penalty: Penalty. Default: `l1`.
     :param C: Regularlization. Default: `0.2`.
+    :param threshold: Value at which to consider coefficient as significant.
     :return: Dictionary storing structure and parameters.
     """
 
@@ -163,7 +182,8 @@ def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty
         return [{'pa': pa, 'ch': ch} for pa, ch in g.edges()]
 
     param_df = get_model_params(df, meta['ordering'], solver=solver, penalty=penalty, C=C)
-    g = get_structure(param_df)
+
+    g = get_structure(param_df, threshold=threshold)
     d, p = get_parameters(df, g)
 
     json_data = {
