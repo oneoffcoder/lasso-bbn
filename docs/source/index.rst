@@ -92,8 +92,8 @@ Citation
 ::
 
     @misc{alemi_2021,
-    title={lassobbn},
-    url={https://lassobbn.oneoffcoder.com/},
+    title={lasso-bbn},
+    url={https://lasso-bbn.readthedocs.io/},
     author={F. Alemi, J. Vang},
     year={2021},
     month={Aug}}
