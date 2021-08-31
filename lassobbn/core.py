@@ -74,7 +74,7 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
 
         return params[[c for c in params if c not in ['__intercept', '__dependent']]].applymap(is_robust)
 
-    def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9):
+    def get_robust_stats(robust: pd.DataFrame):
         s = robust.sum()
         p = s / robust.shape[0]
         i = s.index
@@ -159,7 +159,7 @@ def learn_parents(df_path: str, meta_path: str, n_way=3,
     return seen
 
 
-def get_structure(rels):
+def get_structure(pach_realtionships):
     def trim_parents(parents):
         def is_contained_within(pa, pa_sets):
             for s in pa_sets:
@@ -172,7 +172,7 @@ def get_structure(rels):
         pas = single_pas + [pa for pa in parents if pa.find('!') != -1]
         return pas
 
-    parents = {k: trim_parents(pas) for k, pas in rels.items() if len(pas) > 0}
+    parents = {k: trim_parents(pas) for k, pas in pach_realtionships.items() if len(pas) > 0}
 
     g = nx.DiGraph()
 
