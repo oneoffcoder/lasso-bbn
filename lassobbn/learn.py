@@ -12,6 +12,13 @@ from sklearn.linear_model import LogisticRegression
 
 
 def get_ordering_map(meta: Dict[str, any]) -> Dict[str, list[str]]:
+    """
+    Gets a dictionary specifying ordering. A key is a variable, a value
+    is a list of variables that comes before.
+
+    :param meta: Metadata.
+    :return: Ordering.
+    """
     ordering_map = {}
 
     col_ordering = list(reversed(meta['ordering']))
@@ -23,11 +30,24 @@ def get_ordering_map(meta: Dict[str, any]) -> Dict[str, list[str]]:
 
 
 def get_start_nodes(meta: Dict[str, any]) -> List[str]:
+    """
+    Gets a list of start variables/nodes to kick off the algorithm.
+
+    :param meta: Metadata.
+    :return: Start nodes.
+    """
     ordering = meta['ordering']
     return ordering[-1]
 
 
 def get_n_way(X_cols: List[str], n_way=3) -> List[Tuple[str, ...]]:
+    """
+    Gets up to all n-way interactions.
+
+    :param X_cols: List of variables.
+    :param n_way: Maximum n-way interactions. Default is ``3``.
+    :return: List of n-way interactions.
+    """
     combs = (combinations(X_cols, n + 1) for n in range(n_way))
     combs = chain(*combs)
     combs = list(combs)
@@ -35,6 +55,16 @@ def get_n_way(X_cols: List[str], n_way=3) -> List[Tuple[str, ...]]:
 
 
 def get_data(df_path: str, X_cols: List[str], y_col: str, n_way=3) -> pd.DataFrame:
+    """
+    Gets a data frame with additional columns representing the n-way interactions.
+
+    :param df_path: Path to CSV file.
+    :param X_cols: List of variables.
+    :param y_col: The dependent variable.
+    :param n_way: Number of n-way interactions. Default is ``3``.
+    :return: Data frame.
+    """
+
     def to_col_name(interaction):
         if len(interaction) == 1:
             return interaction[0]
@@ -59,7 +89,18 @@ def get_data(df_path: str, X_cols: List[str], y_col: str, n_way=3) -> pd.DataFra
 
 
 def do_regression(X_cols: List[str], y_col: str, df: pd.DataFrame, solver='liblinear', penalty='l1',
-                  C=0.2) -> pd.DataFrame:
+                  C=0.2) -> LogisticRegression:
+    """
+    Performs regression.
+
+    :param X_cols: Independent variables.
+    :param y_col: Dependent variable.
+    :param df: Data frame.
+    :param solver: Solver. Default is liblinear.
+    :param penalty: Penalty. Default is ``l1``.
+    :param C: Strength of regularlization. Default is ``0.2``.
+    :return: Logistic regression model.
+    """
     X = df[X_cols]
     y = df[y_col]
 
@@ -69,7 +110,16 @@ def do_regression(X_cols: List[str], y_col: str, df: pd.DataFrame, solver='libli
     return model
 
 
-def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression) -> Dict[str, Union[str, float]]:
+def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression) -> Dict[
+    str, Union[str, float]]:
+    """
+    Extracts parameters from models (e.g. coefficients).
+
+    :param independent_cols: List of independent variables.
+    :param y_col: Dependent variable.
+    :param model: Logistic regression model.
+    :return: Parameters (e.g. coefficients of each independent variable).
+    """
     intercept = {'__intercept': model.intercept_[0]}
     indeps = {c: v for c, v in zip(independent_cols, model.coef_[0])}
     y = {'__dependent': y_col}
@@ -81,6 +131,16 @@ def extract_model_params(independent_cols: List[str], y_col: str, model: Logisti
 
 
 def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_pos_lt=0.1) -> pd.DataFrame:
+    """
+    Checks if each coefficient value is "robust". A coefficient is NOT robust
+    if it is less ``ignore_neg_gt`` or if it is less than ``ignore_pos_lt``.
+
+    :param params: Data frame of parameters.
+    :param ignore_neg_gt: Threshold. Default is ``-0.1``.
+    :param ignore_pos_lt: Threshold. Default is ``0.1``.
+    :return: Data frame (all 1's and 0's) indicating robustness.
+    """
+
     def is_robust(v):
         if v < ignore_neg_gt:
             return 0
@@ -92,6 +152,13 @@ def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_po
 
 
 def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9) -> pd.DataFrame:
+    """
+    Computes the robustness statistics.
+
+    :param robust: Data frame of robustness indicators.
+    :param robust_threshold: Threshold for robustness. Default is ``0.9``.
+    :return: Data frame of variables that are robust.
+    """
     s = robust.sum()
     p = s / robust.shape[0]
     i = s.index
@@ -106,6 +173,22 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
                          ignore_neg_gt=-0.1, ignore_pos_lt=0.1,
                          n_regressions=10, solver='liblinear', penalty='l1', C=0.2,
                          robust_threshold=0.9) -> Dict[str, Union[str, List]]:
+    """
+    Performs robust regression.
+
+    :param X_cols: List of independent variables.
+    :param y_col: Dependent variable.
+    :param df_path: Path of CSV file.
+    :param n_way: Number of n-way interactions. Default is 3.
+    :param ignore_neg_gt: Threshold for ignoring negative coefficients.
+    :param ignore_pos_lt: Threshold for ignoring positive coefficients.
+    :param n_regressions: The number of regressions to do. Default is 10.
+    :param solver: Solver. Default is ``liblinear``.
+    :param penalty: Penalty. Default is ``l1``.
+    :param C: Regularization strength. Default is ``0.2``.
+    :param robust_threshold: Robustness threshold. Default is ``0.9``.
+    :return: A dictionary storing parents of a child. The parents are said to be robust.
+    """
     data = get_data(df_path, X_cols, y_col, n_way=n_way)
     frames = (data.sample(frac=0.9) for _ in range(n_regressions))
 
@@ -114,7 +197,7 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
 
     params = pd.DataFrame((extract_model_params(independent_cols, y_col, m) for m in models))
     robust = to_robustness_indication(params, ignore_neg_gt, ignore_pos_lt)
-    robust_stats = get_robust_stats(robust)
+    robust_stats = get_robust_stats(robust, robust_threshold=robust_threshold)
 
     relationships = {
         'child': y_col,
@@ -125,6 +208,16 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
 
 
 def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]]) -> None:
+    """
+    Recursively learns parents or robust independent variables associated with
+    each variable.
+
+    :param df_path: CSV path.
+    :param nodes: List of variables.
+    :param seen: Dictionary storing processed/seen variables.
+    :param ordering_map: Ordering map.
+    :return: None.
+    """
     next_nodes = []
 
     for y_col in nodes:
@@ -147,12 +240,26 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
 
 
 def start_learn(nodes: List[str], ordering_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Kicks off the learning process.
+
+    :param nodes: List of variables.
+    :param ordering_map: Ordering map.
+    :return: Dictionary where keys are children and values are list of parents.
+    """
     seen = {}
     do_learn(nodes, seen, ordering_map)
     return seen
 
 
 def trim_parents(parents: List[str]) -> List[str]:
+    """
+    Prunes or trims down the list of parents. There might be duplicates as a
+    result of compound or n-way interactions.
+    :param parents: List of parents.
+    :return: List of (pruned/trimmed) parents.
+    """
+
     def is_contained_within(pa, pa_sets):
         for s in pa_sets:
             if pa in s:
@@ -166,6 +273,14 @@ def trim_parents(parents: List[str]) -> List[str]:
 
 
 def expand_data(df_path: str, pa_path: str) -> pd.DataFrame:
+    """
+    Expands data with additional columns defined by parent-child relationships.
+
+    :param df_path: CSV path.
+    :param pa_path: Parent path.
+    :return: Data frame.
+    """
+
     def get_interactions(values):
         interactions = sorted(list(set(values)))
         interactions = filter(lambda s: s.find('!') > 0, interactions)
@@ -261,6 +376,12 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
 
 
 def get_graph(parents: Dict[str, List[str]]) -> nx.DiGraph:
+    """
+    Gets a graph ``nx.DiGraph``.
+
+    :param parents: Dictionary; keys are children, values are list of parents.
+    :return: Graph.
+    """
     g = nx.DiGraph()
 
     for ch, pas in parents.items():
