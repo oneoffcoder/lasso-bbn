@@ -11,7 +11,7 @@ from networkx.algorithms.dag import is_directed_acyclic_graph
 from sklearn.linear_model import LogisticRegression
 
 
-def get_ordering_map(meta: Dict[str, any]) -> Dict[str, list[str]]:
+def get_ordering_map(meta: Dict[str, any]) -> Dict[str, List[str]]:
     """
     Gets a dictionary specifying ordering. A key is a variable, a value
     is a list of variables that comes before.
@@ -256,6 +256,7 @@ def trim_parents(parents: List[str]) -> List[str]:
     """
     Prunes or trims down the list of parents. There might be duplicates as a
     result of compound or n-way interactions.
+
     :param parents: List of parents.
     :return: List of (pruned/trimmed) parents.
     """
