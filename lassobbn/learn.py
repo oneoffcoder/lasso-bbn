@@ -224,7 +224,10 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
     return relationships
 
 
-def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]]) -> None:
+def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]], n_way=3,
+             ignore_neg_gt=-0.1, ignore_pos_lt=0.1,
+             n_regressions=10, solver='liblinear', penalty='l1', C=0.2,
+             robust_threshold=0.9) -> None:
     """
     Recursively learns parents or robust independent variables associated with
     each variable.
@@ -233,6 +236,14 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
     :param nodes: List of variables.
     :param seen: Dictionary storing processed/seen variables.
     :param ordering_map: Ordering map.
+    :param n_way: Number of n-way interactions. Default is 3.
+    :param ignore_neg_gt: Threshold for ignoring negative coefficients.
+    :param ignore_pos_lt: Threshold for ignoring positive coefficients.
+    :param n_regressions: The number of regressions to do. Default is 10.
+    :param solver: Solver. Default is ``liblinear``.
+    :param penalty: Penalty. Default is ``l1``.
+    :param C: Regularization strength. Default is ``0.2``.
+    :param robust_threshold: Robustness threshold. Default is ``0.9``.
     :return: None.
     """
     next_nodes = []
@@ -241,7 +252,8 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
         if y_col in seen:
             continue
 
-        rels = do_robust_regression(ordering_map[y_col], y_col, df_path)
+        rels = do_robust_regression(ordering_map[y_col], y_col, df_path, n_way, ignore_neg_gt, ignore_pos_lt,
+                                    n_regressions, solver, penalty, C, robust_threshold)
         seen[y_col] = rels['parents']
         print(f'{len(seen)} / {len(ordering_map)} | {y_col}')
 
@@ -253,20 +265,33 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
     next_nodes = [n for n in next_nodes if len(ordering_map[n]) > 0]
 
     if len(next_nodes) > 0:
-        do_learn(df_path, next_nodes, seen, ordering_map)
+        do_learn(df_path, next_nodes, seen, ordering_map, n_way, ignore_neg_gt, ignore_pos_lt, n_regressions, solver,
+                 penalty, C, robust_threshold)
 
 
-def learn_structure(df_path: str, meta_path: str) -> Dict[str, List[str]]:
+def learn_structure(df_path: str, meta_path: str, n_way=3,
+                    ignore_neg_gt=-0.1, ignore_pos_lt=0.1,
+                    n_regressions=10, solver='liblinear', penalty='l1', C=0.2,
+                    robust_threshold=0.9) -> Dict[str, List[str]]:
     """
     Kicks off the learning process.
 
     :param df_path: CSV path.
     :param meta_path: Metadata path.
+    :param n_way: Number of n-way interactions. Default is 3.
+    :param ignore_neg_gt: Threshold for ignoring negative coefficients.
+    :param ignore_pos_lt: Threshold for ignoring positive coefficients.
+    :param n_regressions: The number of regressions to do. Default is 10.
+    :param solver: Solver. Default is ``liblinear``.
+    :param penalty: Penalty. Default is ``l1``.
+    :param C: Regularization strength. Default is ``0.2``.
+    :param robust_threshold: Robustness threshold. Default is ``0.9``.
     :return: Dictionary where keys are children and values are list of parents.
     """
     ordering_map, nodes = extract_meta(meta_path)
     seen = {}
-    do_learn(df_path, nodes, seen, ordering_map)
+    do_learn(df_path, nodes, seen, ordering_map, n_way, ignore_neg_gt, ignore_pos_lt, n_regressions, solver, penalty, C,
+             robust_threshold)
     return trim_relationships(seen)
 
 
