@@ -256,15 +256,15 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
         do_learn(df_path, next_nodes, seen, ordering_map)
 
 
-def learn_structure(df_path: str, nodes: List[str], ordering_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
+def learn_structure(df_path: str, meta_path: str) -> Dict[str, List[str]]:
     """
     Kicks off the learning process.
 
     :param df_path: CSV path.
-    :param nodes: List of variables.
-    :param ordering_map: Ordering map.
+    :param meta_path: Metadata path.
     :return: Dictionary where keys are children and values are list of parents.
     """
+    ordering_map, nodes = extract_meta(meta_path)
     seen = {}
     do_learn(df_path, nodes, seen, ordering_map)
     return trim_relationships(seen)
