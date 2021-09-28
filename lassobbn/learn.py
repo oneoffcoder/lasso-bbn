@@ -2,7 +2,7 @@ import json
 import operator
 from functools import reduce
 from itertools import combinations, chain
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 import networkx as nx
 import numpy as np
@@ -11,7 +11,7 @@ from networkx.algorithms.dag import is_directed_acyclic_graph
 from sklearn.linear_model import LogisticRegression
 
 
-def get_ordering_map(meta):
+def get_ordering_map(meta: Dict[str, any]) -> Dict[str, list[str]]:
     ordering_map = {}
 
     col_ordering = list(reversed(meta['ordering']))
@@ -22,19 +22,19 @@ def get_ordering_map(meta):
     return ordering_map
 
 
-def get_start_nodes(meta):
+def get_start_nodes(meta: Dict[str, any]) -> List[str]:
     ordering = meta['ordering']
     return ordering[-1]
 
 
-def get_n_way(X_cols: List[str], n_way=3):
+def get_n_way(X_cols: List[str], n_way=3) -> List[Tuple[str, ...]]:
     combs = (combinations(X_cols, n + 1) for n in range(n_way))
     combs = chain(*combs)
     combs = list(combs)
     return combs
 
 
-def get_data(df_path: str, X_cols: List[str], y_col: str, n_way=3):
+def get_data(df_path: str, X_cols: List[str], y_col: str, n_way=3) -> pd.DataFrame:
     def to_col_name(interaction):
         if len(interaction) == 1:
             return interaction[0]
@@ -69,7 +69,7 @@ def do_regression(X_cols: List[str], y_col: str, df: pd.DataFrame, solver='libli
     return model
 
 
-def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression):
+def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression) -> Dict[str, Union[str, float]]:
     intercept = {'__intercept': model.intercept_[0]}
     indeps = {c: v for c, v in zip(independent_cols, model.coef_[0])}
     y = {'__dependent': y_col}
@@ -80,7 +80,7 @@ def extract_model_params(independent_cols: List[str], y_col: str, model: Logisti
     return d
 
 
-def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_pos_lt=0.1):
+def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_pos_lt=0.1) -> pd.DataFrame:
     def is_robust(v):
         if v < ignore_neg_gt:
             return 0
@@ -91,7 +91,7 @@ def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_po
     return params[[c for c in params if c not in ['__intercept', '__dependent']]].applymap(is_robust)
 
 
-def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9):
+def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9) -> pd.DataFrame:
     s = robust.sum()
     p = s / robust.shape[0]
     i = s.index
@@ -105,7 +105,7 @@ def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9):
 def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
                          ignore_neg_gt=-0.1, ignore_pos_lt=0.1,
                          n_regressions=10, solver='liblinear', penalty='l1', C=0.2,
-                         robust_threshold=0.9):
+                         robust_threshold=0.9) -> Dict[str, Union[str, List]]:
     data = get_data(df_path, X_cols, y_col, n_way=n_way)
     frames = (data.sample(frac=0.9) for _ in range(n_regressions))
 
@@ -124,7 +124,7 @@ def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
     return relationships
 
 
-def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]]):
+def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]]) -> None:
     next_nodes = []
 
     for y_col in nodes:
@@ -146,13 +146,13 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
         do_learn(next_nodes, seen, ordering_map)
 
 
-def start_learn(nodes: List[str], ordering_map: Dict[str, List[str]]):
+def start_learn(nodes: List[str], ordering_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
     seen = {}
     do_learn(nodes, seen, ordering_map)
     return seen
 
 
-def trim_parents(parents: List[str]):
+def trim_parents(parents: List[str]) -> List[str]:
     def is_contained_within(pa, pa_sets):
         for s in pa_sets:
             if pa in s:
@@ -165,7 +165,7 @@ def trim_parents(parents: List[str]):
     return pas
 
 
-def expand_data(df_path: str, pa_path: str):
+def expand_data(df_path: str, pa_path: str) -> pd.DataFrame:
     def get_interactions(values):
         interactions = sorted(list(set(values)))
         interactions = filter(lambda s: s.find('!') > 0, interactions)
@@ -260,7 +260,7 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
     return domains, p
 
 
-def get_graph(parents: Dict[str, List[str]]):
+def get_graph(parents: Dict[str, List[str]]) -> nx.DiGraph:
     g = nx.DiGraph()
 
     for ch, pas in parents.items():
