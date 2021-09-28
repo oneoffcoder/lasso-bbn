@@ -1,92 +1,197 @@
-from itertools import chain, combinations
-from typing import Tuple, Dict, List, Any
+import json
+import operator
+from functools import reduce
+from itertools import combinations, chain
+from typing import List, Tuple, Dict
 
 import networkx as nx
 import numpy as np
 import pandas as pd
-import pybbn.graph.dag
 from networkx.algorithms.dag import is_directed_acyclic_graph
-from pybbn.graph.dag import Bbn
 from sklearn.linear_model import LogisticRegression
 
 
-def get_model_params(df: pd.DataFrame, ordering: List[List[str]], solver='liblinear', penalty='l1',
-                     C=0.2) -> pd.DataFrame:
-    """
-    Gets LASSO regression parameters for each variable.
+def get_ordering_map(meta):
+    ordering_map = {}
 
-    :param df: Data.
-    :param ordering: Ordering of variables.
-    :param solver: Solver (liblinear or saga). Default: `liblinear`.
-    :param penalty: Penalty. Default: `l1`.
-    :param C: Regularlization. Default: `0.2`.
-    :return: LASSO regression parameters for each variable.
-    """
-
-    def get_model(df, X_cols, y_col):
-        X = df[X_cols]
-        y = df[y_col]
-
-        model = LogisticRegression(penalty=penalty, solver=solver, C=C)
-        model.fit(X, y)
-
-        return model
-
-    def extract_model_params(y, fields, model):
-        child = {'child': y}
-        intercepts = {'intercept': model.intercept_[0]}
-        coefs = {field: coef for field, coef in zip(fields, model.coef_[0])}
-        others = {field: 0.0 for field in fields[len(coefs):]}
-
-        p = {**child, **intercepts}
-        p = {**p, **coefs}
-        p = {**p, **others}
-
-        return p
-
-    def get_models(i, y_cols):
-        X_cols = list(chain(*ordering[:i]))
-        return [(y_col, get_model(df, X_cols, y_col)) for y_col in y_cols]
-
-    models = chain(*[get_models(i, y_cols) for i, y_cols in enumerate(ordering) if i > 0])
-    param_df = pd.DataFrame([extract_model_params(y, df.columns, model) for y, model in models])
-    return param_df
+    col_ordering = list(reversed(meta['ordering']))
+    for i, arr in enumerate(col_ordering):
+        for col in arr:
+            indeps = list(chain(*col_ordering[i + 1:]))
+            ordering_map[col] = indeps
+    return ordering_map
 
 
-def get_structure(param_df: pd.DataFrame, threshold=0.0) -> nx.DiGraph:
-    """
-    Gets the structure.
+def get_start_nodes(meta):
+    ordering = meta['ordering']
+    return ordering[-1]
 
-    :param param_df: LASSO regression parameters for each variable.
-    :param threshold: Value at which to consider coefficient as significant.
-    :return: Structure.
-    """
 
-    def get_edges(r, nodes):
-        edges = []
-        ch = r['child']
-        for pa in nodes:
-            if pa == ch:
-                break
-            if abs(r[pa]) > threshold:
-                edge = (pa, ch)
-                edges.append(edge)
-        return edges
+def get_n_way(X_cols: List[str], n_way=3):
+    combs = (combinations(X_cols, n + 1) for n in range(n_way))
+    combs = chain(*combs)
+    combs = list(combs)
+    return combs
 
-    nodes = [v for v in param_df.columns if v not in ['child', 'intercept']]
-    edges = list(chain(*[get_edges(r, nodes) for _, r in param_df.iterrows()]))
 
-    g = nx.DiGraph()
+def get_data(df_path: str, X_cols: List[str], y_col: str, n_way=3):
+    def to_col_name(interaction):
+        if len(interaction) == 1:
+            return interaction[0]
+        else:
+            return '!'.join(interaction)
 
-    for n in nodes:
-        g.add_node(n)
+    def get_interaction(interaction):
+        def multiply(r):
+            vals = [r[col] for col in interaction]
+            return reduce(operator.mul, vals, 1)
 
-    for edge in edges:
-        g.add_edge(*edge)
-        if not is_directed_acyclic_graph(g):
-            g.remove_edge(*edge)
+        return data.apply(multiply, axis=1)
 
-    return g
+    data = pd.read_csv(df_path)
+    interactions = get_n_way(X_cols, n_way=n_way)
+
+    d = {to_col_name(interaction): get_interaction(interaction) for interaction in interactions}
+    d = {**d, **{y_col: data[y_col]}}
+
+    df = pd.DataFrame(d)
+    return df
+
+
+def do_regression(X_cols: List[str], y_col: str, df: pd.DataFrame, solver='liblinear', penalty='l1',
+                  C=0.2) -> pd.DataFrame:
+    X = df[X_cols]
+    y = df[y_col]
+
+    model = LogisticRegression(penalty=penalty, solver=solver, C=C)
+    model.fit(X, y)
+
+    return model
+
+
+def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression):
+    intercept = {'__intercept': model.intercept_[0]}
+    indeps = {c: v for c, v in zip(independent_cols, model.coef_[0])}
+    y = {'__dependent': y_col}
+
+    d = {**y, **intercept}
+    d = {**d, **indeps}
+
+    return d
+
+
+def to_robustness_indication(params: pd.DataFrame, ignore_neg_gt=-0.1, ignore_pos_lt=0.1):
+    def is_robust(v):
+        if v < ignore_neg_gt:
+            return 0
+        if v < ignore_pos_lt:
+            return 0
+        return 1
+
+    return params[[c for c in params if c not in ['__intercept', '__dependent']]].applymap(is_robust)
+
+
+def get_robust_stats(robust: pd.DataFrame, robust_threshold=0.9):
+    s = robust.sum()
+    p = s / robust.shape[0]
+    i = s.index
+
+    df = pd.DataFrame([{'name': name, 'count': count, 'percent': pct} for name, count, pct in zip(i, s, p)])
+    df = df.sort_values(['count', 'percent', 'name'], ascending=[False, False, True])
+    df = df[df['percent'] >= robust_threshold]
+    return df
+
+
+def do_robust_regression(X_cols: List[str], y_col: str, df_path: str, n_way=3,
+                         ignore_neg_gt=-0.1, ignore_pos_lt=0.1,
+                         n_regressions=10, solver='liblinear', penalty='l1', C=0.2,
+                         robust_threshold=0.9):
+    data = get_data(df_path, X_cols, y_col, n_way=n_way)
+    frames = (data.sample(frac=0.9) for _ in range(n_regressions))
+
+    independent_cols = [c for c in data.columns if c != y_col]
+    models = (do_regression(independent_cols, y_col, data, solver=solver, penalty=penalty, C=C) for df in frames)
+
+    params = pd.DataFrame((extract_model_params(independent_cols, y_col, m) for m in models))
+    robust = to_robustness_indication(params, ignore_neg_gt, ignore_pos_lt)
+    robust_stats = get_robust_stats(robust)
+
+    relationships = {
+        'child': y_col,
+        'parents': list(robust_stats['name'])
+    }
+
+    return relationships
+
+
+def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], ordering_map: Dict[str, List[str]]):
+    next_nodes = []
+
+    for y_col in nodes:
+        if y_col in seen:
+            continue
+
+        rels = do_robust_regression(ordering_map[y_col], y_col, df_path)
+        seen[y_col] = rels['parents']
+        print(f'{len(seen)} / {len(ordering_map)} | {y_col}')
+
+        component_parents = list(set(chain(*[pa.split('!') for pa in rels['parents']])))
+        next_nodes.extend(component_parents)
+
+    next_nodes = list(set(next_nodes))
+    next_nodes = [n for n in next_nodes if n not in seen]
+    next_nodes = [n for n in next_nodes if len(ordering_map[n]) > 0]
+
+    if len(next_nodes) > 0:
+        do_learn(next_nodes, seen, ordering_map)
+
+
+def start_learn(nodes: List[str], ordering_map: Dict[str, List[str]]):
+    seen = {}
+    do_learn(nodes, seen, ordering_map)
+    return seen
+
+
+def trim_parents(parents: List[str]):
+    def is_contained_within(pa, pa_sets):
+        for s in pa_sets:
+            if pa in s:
+                return True
+        return False
+
+    intera_pas = [set(pa.split('!')) for pa in parents if pa.find('!') != -1]
+    single_pas = [pa for pa in parents if pa.find('!') < 0 and is_contained_within(pa, intera_pas) is False]
+    pas = single_pas + [pa for pa in parents if pa.find('!') != -1]
+    return pas
+
+
+def expand_data(df_path: str, pa_path: str):
+    def get_interactions(values):
+        interactions = sorted(list(set(values)))
+        interactions = filter(lambda s: s.find('!') > 0, interactions)
+        interactions = map(lambda s: (s, s.split('!')), interactions)
+        interactions = {k: v for k, v in interactions}
+
+        return interactions
+
+    df = pd.read_csv(df_path)
+
+    with open(pa_path, 'r') as f:
+        parents = json.load(f)
+
+    ch_interactions = get_interactions(chain(*[v for _, v in parents.items()]))
+    pa_interactions = get_interactions([k for k, _ in parents.items()])
+    interactions = {**ch_interactions, **pa_interactions}
+
+    def expand(r, cols):
+        vals = [r[c] for c in cols]
+        result = reduce(operator.mul, vals, 1)
+        return result
+
+    for col_name, cols in interactions.items():
+        df[col_name] = df.apply(lambda r: expand(r, cols), axis=1)
+
+    return df
 
 
 def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]], Dict[str, List[float]]]:
@@ -122,7 +227,7 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
             vals = chain(*vals)
             vals = combinations(vals, len(pas) + 1)
             vals = filter(is_valid, vals)
-            vals = map(lambda tups: ' and '.join([f'{t[0]}=="{t[1]}"' for t in tups]), vals)
+            vals = map(lambda tups: ' and '.join([f'`{t[0]}`=="{t[1]}"' for t in tups]), vals)
             vals = list(vals)
             return vals
 
@@ -155,49 +260,23 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
     return domains, p
 
 
-def do_learn(df: pd.DataFrame, meta: Dict[Any, Any], solver='liblinear', penalty='l1', C=0.2, threshold=0.0) -> Dict:
-    """
-    Learns the structure and parameter of a Bayesian Belief Network using LASSO.
+def get_graph(parents: Dict[str, List[str]]):
+    g = nx.DiGraph()
 
-    :param df: Data.
-    :param meta: Meta information used for learning structure.
-    :param solver: Solver (liblinear or saga). Default: `liblinear`.
-    :param penalty: Penalty. Default: `l1`.
-    :param C: Regularlization. Default: `0.2`.
-    :param threshold: Value at which to consider coefficient as significant.
-    :return: Dictionary storing structure and parameters.
-    """
+    for ch, pas in parents.items():
+        for pa in pas:
+            g.add_edge(pa, ch)
 
-    def get_node(name, n_id):
-        return {
-            'probs': p[name],
-            'variable': {
-                'id': n_id,
-                'name': name,
-                'values': d[name]
-            }
-        }
+            if not is_directed_acyclic_graph(g):
+                g.remove_edge(pa, ch)
 
-    def get_edges():
-        return [{'pa': pa, 'ch': ch} for pa, ch in g.edges()]
+        for pa in pas:
+            pa_set = pa.split('!')
+            if len(pa_set) < 2:
+                continue
 
-    param_df = get_model_params(df, meta['ordering'], solver=solver, penalty=penalty, C=C)
+            for single_pa in pa_set:
+                g.add_edge(single_pa, pa)
 
-    g = get_structure(param_df, threshold=threshold)
-    d, p = get_parameters(df, g)
-
-    json_data = {
-        'nodes': {name: get_node(name, n_id) for n_id, name in enumerate(g.nodes())},
-        'edges': get_edges()
-    }
-
-    return json_data
-
-
-def to_bbn(json_data: Dict) -> pybbn.graph.dag.Bbn:
-    """
-    Converts the dictionary of structure and parameters to a Py-BBN instance.
-    :param json_data: Dictionary of structure and parameters.
-    :return: BBN.
-    """
-    return Bbn.from_dict(json_data)
+                if not is_directed_acyclic_graph(g):
+                    g.remove_edge(single_pa, pa)
