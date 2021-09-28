@@ -40,6 +40,20 @@ def get_start_nodes(meta: Dict[str, any]) -> List[str]:
     return ordering[-1]
 
 
+def extract_meta(meta_path: str) -> Tuple[Dict[str, List[str]], List[str]]:
+    """
+    Extracts meta data.
+    :param meta_path: Metadata path (JSON file).
+    :return: Tuple; (ordering map, start nodes).
+    """
+    with open(meta_path, 'r') as f:
+        meta = json.load(f)
+
+    ordering_map = get_ordering_map(meta)
+    start_nodes = get_start_nodes(meta)
+    return ordering_map, start_nodes
+
+
 def get_n_way(X_cols: List[str], n_way=3) -> List[Tuple[str, ...]]:
     """
     Gets up to all n-way interactions.
@@ -236,20 +250,21 @@ def do_learn(df_path: str, nodes: List[str], seen: Dict[str, List[str]], orderin
     next_nodes = [n for n in next_nodes if len(ordering_map[n]) > 0]
 
     if len(next_nodes) > 0:
-        do_learn(next_nodes, seen, ordering_map)
+        do_learn(df_path, next_nodes, seen, ordering_map)
 
 
-def start_learn(nodes: List[str], ordering_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
+def learn_structure(df_path: str, nodes: List[str], ordering_map: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """
     Kicks off the learning process.
 
+    :param df_path: CSV path.
     :param nodes: List of variables.
     :param ordering_map: Ordering map.
     :return: Dictionary where keys are children and values are list of parents.
     """
     seen = {}
-    do_learn(nodes, seen, ordering_map)
-    return seen
+    do_learn(df_path, nodes, seen, ordering_map)
+    return trim_relationships(seen)
 
 
 def trim_parents(parents: List[str]) -> List[str]:
@@ -273,12 +288,22 @@ def trim_parents(parents: List[str]) -> List[str]:
     return pas
 
 
-def expand_data(df_path: str, pa_path: str) -> pd.DataFrame:
+def trim_relationships(rels: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """
+    Trims/prune parent-child relationships.
+
+    :param rels: Dictionary of parent-child relationships.
+    :return: Dictionary of trimmed parent-child relationships.
+    """
+    return {k: trim_parents(pas) for k, pas in rels.items() if len(pas) > 0}
+
+
+def expand_data(df_path: str, parents: Dict[str, List[str]]) -> pd.DataFrame:
     """
     Expands data with additional columns defined by parent-child relationships.
 
     :param df_path: CSV path.
-    :param pa_path: Parent path.
+    :param parents: Parent-child relationships.
     :return: Data frame.
     """
 
@@ -291,9 +316,6 @@ def expand_data(df_path: str, pa_path: str) -> pd.DataFrame:
         return interactions
 
     df = pd.read_csv(df_path)
-
-    with open(pa_path, 'r') as f:
-        parents = json.load(f)
 
     ch_interactions = get_interactions(chain(*[v for _, v in parents.items()]))
     pa_interactions = get_interactions([k for k, _ in parents.items()])
@@ -310,13 +332,13 @@ def expand_data(df_path: str, pa_path: str) -> pd.DataFrame:
     return df
 
 
-def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]], Dict[str, List[float]]]:
+def learn_parameters(df_path: str, pas: Dict[str, List[str]]) -> Tuple[Dict[str, List[str]], nx.DiGraph, Dict[str, List[float]]]:
     """
     Gets the parameters.
 
-    :param df: Data.
-    :param g: Graph (structure).
-    :return: Tuple; first item is dictionary of domains; second item is dictionary of probabilities.
+    :param df_path: CSV file.
+    :param pas: Parent-child relationships (structure).
+    :return: Tuple; first item is dictionary of domains; second item is a graph; third item is dictionary of probabilities.
     """
 
     def vals_to_str():
@@ -366,6 +388,9 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
         counts = list(chain(*counts))
         return counts
 
+    df = expand_data(df_path, pas)
+    g = get_graph(pas)
+
     ddf = vals_to_str()
     nodes = list(g.nodes())
 
@@ -373,7 +398,7 @@ def get_parameters(df: pd.DataFrame, g: nx.DiGraph) -> Tuple[Dict[str, List[str]
     parents = {ch: list(g.predecessors(ch)) for ch in nodes}
 
     p = {ch: get_total(get_filters(ch, parents, domains), len(domains[ch])) for ch in nodes}
-    return domains, p
+    return domains, g, p
 
 
 def get_graph(parents: Dict[str, List[str]]) -> nx.DiGraph:
@@ -402,3 +427,5 @@ def get_graph(parents: Dict[str, List[str]]) -> nx.DiGraph:
 
                 if not is_directed_acyclic_graph(g):
                     g.remove_edge(single_pa, pa)
+
+    return g
