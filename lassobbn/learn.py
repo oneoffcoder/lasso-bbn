@@ -8,6 +8,9 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from networkx.algorithms.dag import is_directed_acyclic_graph
+from pybbn.graph.dag import Bbn
+from pybbn.graph.jointree import JoinTree
+from pybbn.pptc.inferencecontroller import InferenceController
 from sklearn.linear_model import LogisticRegression
 
 
@@ -332,7 +335,8 @@ def expand_data(df_path: str, parents: Dict[str, List[str]]) -> pd.DataFrame:
     return df
 
 
-def learn_parameters(df_path: str, pas: Dict[str, List[str]]) -> Tuple[Dict[str, List[str]], nx.DiGraph, Dict[str, List[float]]]:
+def learn_parameters(df_path: str, pas: Dict[str, List[str]]) -> Tuple[
+    Dict[str, List[str]], nx.DiGraph, Dict[str, List[float]]]:
     """
     Gets the parameters.
 
@@ -429,3 +433,47 @@ def get_graph(parents: Dict[str, List[str]]) -> nx.DiGraph:
                     g.remove_edge(single_pa, pa)
 
     return g
+
+
+def to_bbn(d: Dict[str, List[str]], s: nx.DiGraph, p: Dict[str, List[float]]) -> Bbn:
+    """
+    Converts the structure and parameters to a BBN.
+
+    :param d: Domain of each variable.
+    :param s: Structure.
+    :param p: Parameter.
+    :return: BBN.
+    """
+
+    def get_node(name, n_id):
+        return {
+            'probs': p[name],
+            'variable': {
+                'id': n_id,
+                'name': name,
+                'values': d[name]
+            }
+        }
+
+    def get_edges():
+        return [{'pa': pa, 'ch': ch} for pa, ch in s.edges()]
+
+    nodes = {name: get_node(name, n_id) for n_id, name in enumerate(s.nodes())}
+    edges = get_edges()
+
+    data = {
+        'nodes': nodes,
+        'edges': edges
+    }
+
+    return Bbn.from_dict(data)
+
+
+def to_join_tree(bbn: Bbn) -> JoinTree:
+    """
+    Converts a BBN to a Join Tree.
+
+    :param bbn: BBN.
+    :return: Join Tree.
+    """
+    return InferenceController.apply(bbn)
