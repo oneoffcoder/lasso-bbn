@@ -502,3 +502,17 @@ def to_join_tree(bbn: Bbn) -> JoinTree:
     :return: Join Tree.
     """
     return InferenceController.apply(bbn)
+
+
+def posteriors_to_df(jt: JoinTree) -> pd.DataFrame:
+    """
+    Converts posteriors to data frame.
+
+    :param jt: Join tree.
+    :return: Data frame.
+    """
+    mdf = pd.DataFrame([{**{'name': node}, **{val: prob for val, prob in posteriors.items()}}
+                        for node, posteriors in jt.get_posteriors().items()])
+    mdf.index = mdf['name']
+    mdf = mdf.drop(columns=['name'])
+    return mdf

@@ -1,4 +1,4 @@
-from lassobbn.learn import learn_parameters, learn_structure, to_bbn, to_join_tree
+from lassobbn.learn import learn_parameters, learn_structure, to_bbn, to_join_tree, posteriors_to_df
 import pandas as pd
 
 
@@ -43,8 +43,5 @@ print('-' * 15)
 
 # get posteriors
 print('posteriors')
-mdf = pd.DataFrame([{**{'name': node}, **{val: prob for val, prob in posteriors.items()}}
-                    for node, posteriors in jt.get_posteriors().items()])
-mdf.index = mdf['name']
-mdf = mdf.drop(columns=['name'])
+mdf = posteriors_to_df(jt)
 print(mdf)
