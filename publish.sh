@@ -7,15 +7,12 @@ buildCode() {
   cd /pypi-lib \
     && make clean \
     && make \
-    && python setup.py sdist bdist bdist_wheel \
-    && twine check dist/* \
-    && cd /pypi-lib/docs \
-    && make html
+    && twine check dist/*
 }
 
 updateVersion() {
   echo "replace version of software to ${LIB_VERSION}"
-  sed -i "s/version='0.0.1'/version='${LIB_VERSION}'/g" /pypi-lib/setup.py
+  sed -i "s/version = 0.0.1/version = ${LIB_VERSION}/g" /pypi-lib/setup.cfg
 }
 
 copyCredentials() {
