@@ -10,4 +10,4 @@ After you learned the structure and parameters of the BBN, then you can use `Py-
 .. literalinclude:: code/demo.py
    :language: python
    :linenos:
-   :lines: 1-2, 44-94
+   :lines: 44-

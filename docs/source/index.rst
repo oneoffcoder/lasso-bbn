@@ -43,7 +43,6 @@ You may install ``lassobbn`` from `pypi <https://pypi.org/project/lassobbn/>`_.
    metainfo
    learning
    inference
-   example
    algorithm
    modules
    apis
