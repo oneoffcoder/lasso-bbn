@@ -5,13 +5,23 @@
 Learning Bayesian Belief Networks (BBNs) with LASSO. Example code is as below. 
 
 ```python
-import pandas as pd
-from lassobbn.learn import do_learn
+from lassobbn.learn import learn_parameters, learn_structure, to_bbn, to_join_tree, posteriors_to_df
 
-df = pd.read_csv('./path/to/data.csv')
-bbn_specs = do_learn(df)
+# Step 1. Learn the structure
+df_path = './data/data-binary.csv'
+meta_path = './data/data-binary-complete.json'
 
-print(bbn_specs)
+parents = learn_structure(df_path, meta_path, n_way=2, ignore_neg_gt=-0.01, ignore_pos_lt=0.05)
+
+# Step 2. Learn the parameters
+d, g, p = learn_parameters(df_path, parents)
+
+# Step 3. Get the BBN
+bbn = to_bbn(d, g, p)
+
+# Step 4. Get the Join Tree
+jt = to_join_tree(bbn)
+
 ```
 
 You can then use [Py-BBN](https://py-bbn.readthedocs.io/) to create a BBN and join tree (JT) instance and perform exact inference.
