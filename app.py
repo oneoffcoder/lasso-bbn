@@ -1,4 +1,6 @@
 from lassobbn.learn import learn_parameters, learn_structure, to_bbn, to_join_tree
+import pandas as pd
+
 
 # Learn the structure
 df_path = './data/data-binary.csv'
@@ -16,11 +18,15 @@ print(d)
 print('-' * 15)
 
 print('structure')
-print(g.edges())
+for pa, ch in g.edges():
+    print(f'{pa} -> {ch}')
 print('-' * 15)
 
 print('parameters')
-print(p)
+for k, arr in p.items():
+    probs = [f'{v:.2f}' for v in arr]
+    probs = ', '.join(probs)
+    print(f'{k}: [{probs}]')
 print('-' * 15)
 
 # Get the BBN
@@ -33,3 +39,12 @@ print('-' * 15)
 
 print('join tree')
 print(jt)
+print('-' * 15)
+
+# get posteriors
+print('posteriors')
+mdf = pd.DataFrame([{**{'name': node}, **{val: prob for val, prob in posteriors.items()}}
+                    for node, posteriors in jt.get_posteriors().items()])
+mdf.index = mdf['name']
+mdf = mdf.drop(columns=['name'])
+print(mdf)
