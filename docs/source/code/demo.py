@@ -1,34 +1,93 @@
-import json
+from lassobbn.learn import learn_parameters, learn_structure, to_bbn, to_join_tree, posteriors_to_df
 
-import pandas as pd
+# Step 1. Learn the structure
+df_path = './data/data-binary.csv'
+meta_path = './data/data-binary-complete.json'
 
-from lassobbn.learn import do_learn, to_bbn
-from pybbn.pptc.inferencecontroller import InferenceController
+parents = learn_structure(df_path, meta_path, n_way=2, ignore_neg_gt=-0.01, ignore_pos_lt=0.05)
+print('parents')
+print(parents)
+print('-' * 15)
+# {'e': ['d!b'], 'd': ['b!a']}
 
-# Step 1. read the data
-df = pd.read_csv('./data/data-binary.csv')
+# Step 2. Learn the parameters
+d, g, p = learn_parameters(df_path, parents)
+print('domains')
+print(d)
+print('-' * 15)
+# {'d!b': ['0', '1'], 'e': ['0', '1'], 'd': ['0', '1'], 'b': ['0', '1'], 'b!a': ['0', '1'], 'a': ['0', '1']}
 
-# Step 2. read in the meta information
-with open('./data/data-binary-complete.json', 'r') as f:
-    meta = json.load(f)
+print('structure')
+for pa, ch in g.edges():
+    print(f'{pa} -> {ch}')
+print('-' * 15)
+# d!b -> e
+# d -> d!b
+# b -> d!b
+# b -> b!a
+# b!a -> d
+# a -> b!a
 
-# Step 3. learn the structure and parameters
-json_data = do_learn(df, meta)
+print('parameters')
+for k, arr in p.items():
+    probs = [f'{v:.2f}' for v in arr]
+    probs = ', '.join(probs)
+    print(f'{k}: [{probs}]')
+print('-' * 15)
+# d!b: [1.00, 0.00, 1.00, 0.00, 1.00, 0.00, 0.00, 1.00]
+# e: [0.77, 0.23, 0.08, 0.92]
+# d: [0.79, 0.21, 0.80, 0.20]
+# b: [0.80, 0.20]
+# b!a: [1.00, 0.00, 1.00, 0.00, 1.00, 0.00, 0.00, 1.00]
+# a: [0.19, 0.81]
 
-# Step 4. convert to a Py-BBN instance
-bbn = to_bbn(json_data)
+# Step 3. Get the BBN
+bbn = to_bbn(d, g, p)
 
-# Step 5. convert the BBN to a join tree
-join_tree = InferenceController.apply(bbn)
+# Step 4. Get the Join Tree
+jt = to_join_tree(bbn)
 
-# print the posterior probabilities
-for node, posteriors in join_tree.get_posteriors().items():
-    p = ', '.join([f'{val}={prob:.5f}' for val, prob in posteriors.items()])
-    print(f'{node} : {p}')
+print('bbn')
+print(bbn)
+print('-' * 15)
+# 0|d!b|0,1
+# 1|e|0,1
+# 2|d|0,1
+# 3|b|0,1
+# 4|b!a|0,1
+# 5|a|0,1
+# 0->1
+# 2->0
+# 3->0
+# 3->4
+# 4->2
+# 5->4
 
-# inference should print the following
-# a : 0=0.18930, 1=0.81070
-# b : 0=0.80290, 1=0.19710
-# c : 0=0.68690, 1=0.31310
-# d : 0=0.79520, 1=0.20480
-# e : 0=0.74160, 1=0.25840
+print('join tree')
+print(jt)
+print('-' * 15)
+# (d!b,e)
+# (b,d,d!b)
+# (b,b!a,d)
+# (a,b,b!a)
+# |(b,d,d!b) -- d,b -- (b,b!a,d)|
+# |(b,b!a,d) -- b,b!a -- (a,b,b!a)|
+# |(d!b,e) -- d!b -- (b,d,d!b)|
+# (b,d,d!b)--|(b,d,d!b) -- d,b -- (b,b!a,d)|--(b,b!a,d)
+# (b,b!a,d)--|(b,b!a,d) -- b,b!a -- (a,b,b!a)|--(a,b,b!a)
+# (d!b,e)--|(d!b,e) -- d!b -- (b,d,d!b)|--(b,d,d!b)
+
+# Get posteriors
+print('posteriors')
+mdf = posteriors_to_df(jt)
+print(mdf)
+
+# should print
+#              0         1
+# name
+# d!b   0.960997  0.039003
+# e     0.740779  0.259221
+# d     0.795200  0.204800
+# b     0.802900  0.197100
+# b!a   0.840211  0.159789
+# a     0.189300  0.810700
