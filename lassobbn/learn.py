@@ -127,8 +127,8 @@ def do_regression(X_cols: List[str], y_col: str, df: pd.DataFrame, solver='libli
     return model
 
 
-def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression) -> Dict[
-    str, Union[str, float]]:
+def extract_model_params(independent_cols: List[str], y_col: str, model: LogisticRegression) -> \
+        Dict[str, Union[str, float]]:
     """
     Extracts parameters from models (e.g. coefficients).
 
@@ -360,8 +360,8 @@ def expand_data(df_path: str, parents: Dict[str, List[str]]) -> pd.DataFrame:
     return df
 
 
-def learn_parameters(df_path: str, pas: Dict[str, List[str]]) -> Tuple[
-    Dict[str, List[str]], nx.DiGraph, Dict[str, List[float]]]:
+def learn_parameters(df_path: str, pas: Dict[str, List[str]]) -> \
+        Tuple[Dict[str, List[str]], nx.DiGraph, Dict[str, List[float]]]:
     """
     Gets the parameters.
 
