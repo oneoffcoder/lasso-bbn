@@ -21,10 +21,10 @@ If a user can correctly specify the order of the variables by indicating which v
 
 The structure learning algorithm iterates over each variable as a dependent variable while regressing on all those that come before it. Since there are 5 variables, there are a maximum of 5 regression equations to run. Since ``a`` is the first variable and no other variables precede it, we will only run 4 regression equations.
 
-- :math:`b = a`
-- :math:`c = a + b`
-- :math:`d = a + b + c`
 - :math:`e = a + b + c + d`
+- :math:`d = a + b + c`
+- :math:`c = a + b`
+- :math:`b = a`
 
 We will eliminate which independents variables are not a parent of the dependent variable by knowing that the sequence implies time dependency and the coefficient associated with each independent variable indicates prediction strength. Lasso regularization will force the coefficients to zero, and it is expected that each model specified will have non-zero coefficients for those independent variables that are parents of the dependent variable. The following table lists the coefficients of each variable in a model for when the specified variable is the dependent variable.
 
@@ -34,4 +34,4 @@ We will eliminate which independents variables are not a parent of the dependent
 
 You see that the regression models for ``a``, ``b`` and ``d`` have no parents. The regression model for ``c`` as the dependent variable suggests that ``a`` and ``b`` are its parents. The regression model for ``e`` as the dependent variable suggests that ``c`` and ``d`` are its parents.
 
-With the sequence to help us build the models, and with using Lasso regularization, we now can induce parent-child relationships between the dependent and non-zero coefficient variables (by non-zero, we mean the absolute value of the coefficient). We can proceed through the models from ``a`` to ``e`` (as the dependent variable) and start drawing the arcs between parent and child one at a time, and where a cycle is formed, skip drawing this arc.
+With the sequence to help us build the models, and with using Lasso regularization, we now can induce parent-child relationships between the dependent and non-zero coefficient variables (by non-zero, we mean the absolute value of the coefficient). We can proceed through the models from ``e`` to ``a`` (as the dependent variable) and start drawing the arcs between parent and child one at a time, and where a cycle is formed, skip drawing this arc.
