@@ -1,3 +1,4 @@
+jupyter/ignore
 **/*.pyc
 .idea/
 docs/build/
